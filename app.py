@@ -7,14 +7,12 @@ NOME_ARQUIVO = 'consultas_nutricionais.csv'
 ARQUIVO_CARDAPIOS = 'cardapios_pacientes.csv'
 SENHA_CORRETA = "Mi81283137."
 
-# CONFIGURAÇÃO DA INTERFACE (ESTILO WEBDIET)
 ui.set_page_config(
     page_title="WebDiet Pro",
     page_icon="🥗",
     layout="wide"
 )
 
-# ESTILO VISUAL EM LINHAS CURTAS PARA NÃO CORTAR
 ui.markdown("""
     <style>
     .stApp { background-color: #f7f9fc; }
@@ -54,13 +52,14 @@ else:
     with aba1:
         ui.header("Ficha Clínica & Rotina Esportiva")
         c1, c2, c3 = ui.columns(3)
-        nome = c1.text_input("Nome do Paciente")
-        idade = c2.number_input("Idade", 1, 120, 25)
-        sexo = c3.radio("Sexo Biológico", ["Masculino", "Feminino"], horizontal=True)
+        # CHAVES FIXAS TRAVAM OS DADOS DO PACIENTE AO MUDAR DE ABA
+        nome = c1.text_input("Nome do Paciente", key='nome_paciente')
+        idade = c2.number_input("Idade", 1, 120, 25, key='idade_paciente')
+        sexo = c3.radio("Sexo Biológico", ["Masculino", "Feminino"], horizontal=True, key='sexo_paciente')
 
         c4, c5 = ui.columns(2)
-        peso = c4.number_input("Peso (kg)", 0.0, 300.0, 70.0, 0.1)
-        altura = c5.number_input("Altura (m)", 0.0, 2.5, 1.70, 0.01)
+        peso = c4.number_input("Peso (kg)", 0.0, 300.0, 70.0, 0.1, key='peso_paciente')
+        altura = c5.number_input("Altura (m)", 0.0, 2.5, 1.70, 0.01, key='alt_paciente')
 
         ui.subheader("🎯 Planejamento e Objetivos")
         lista_obj = [
@@ -68,7 +67,7 @@ else:
             "Ganho de Massa Muscular (Hipertrofia)", 
             "Melhora da Saúde (Normocalórica)"
         ]
-        objetivo = ui.selectbox("Qual o principal objetivo?", lista_obj)
+        objetivo = ui.selectbox("Qual o principal objetivo?", lista_obj, key='obj_paciente')
 
         ui.subheader("🏋️‍♂️ Atividade Física (MET)")
         lista_met = [
@@ -78,8 +77,8 @@ else:
             "Ciclismo de Rua (MET: 7.5)", 
             "Nenhum / Sedentário (MET: 1.0)"
         ]
-        modalidade = ui.selectbox("Selecione o esporte:", lista_met)
-        tempo = ui.number_input("Duração (minutos):", 0, 180, 60)
+        modalidade = ui.selectbox("Selecione o esporte:", lista_met, key='met_paciente')
+        tempo = ui.number_input("Duração (minutos):", 0, 180, 60, key='tempo_paciente')
 
         if ui.button("Calcular Metabolismo", key="btn_cad"):
             if not nome or peso == 0.0 or altura == 0.0: 
@@ -95,9 +94,8 @@ else:
                 else:
                     geb = 655.1 + (9.563 * peso) + (1.85 * alt_cm) - (4.676 * idade)
                 
-                # EXTRACTOR DE MET SEGURO E EM LINHAS PEQUENAS
                 partes = modalidade.split("MET: ")
-                met_val = float(partes[1].replace(")", ""))
+                met_val = float(partes.replace(")", ""))
                 
                 g_treino = (met_val * 3.5 * peso / 200) * tempo
                 g_total = (geb * 1.2) + g_treino
@@ -120,60 +118,62 @@ else:
 
                 g_carb = max(0.0, (calorias - ((g_prot * 4) + (g_fat * 9))) / 4)
 
-                ui.session_state['nome'] = nome
-                ui.session_state['peso'] = peso
                 ui.session_state['g_total'] = g_total
                 ui.session_state['calorias'] = calorias
                 ui.session_state['estrategia'] = estrategia
                 ui.session_state['agua'] = agua_ideal
                 ui.session_state['macros'] = f"P: {g_prot:.1f}g | C: {g_carb:.1f}g | G: {g_fat:.1f}g"
+                ui.session_state['calculado'] = True
 
-                ui.markdown(f"""<div class='metric-card'>
-                <h3>🎯 Resultado: {nome}</h3>
-                <p><b>Estratégia:</b> {estrategia}</p>
-                <p><b>IMC:</b> {imc:.2f} ({diag})</p>
-                <p><b>Meta Dieta:</b> {calorias:.0f} kcal</p>
-                <p><b>Água:</b> {agua_ideal:.2f} L</p>
-                <p><b>Gasto Total (TDEE):</b> {g_total:.0f} kcal</p>
-                </div>""", unsafe_allow_html=True)
-
-                m1, m2, m3 = ui.columns(3)
-                m1.metric("Proteínas", f"{g_prot:.1f} g")
-                m2.metric("Carboidratos", f"{g_carb:.1f} g")
-                m3.metric("Lipídios", f"{g_fat:.1f} g")
+        # MOSTRA RESULTADOS SE JÁ TIVER SIDO CALCULADO UMA VEZ
+        if ui.session_state.get('calculado', False):
+            ui.markdown(f"""<div class='metric-card'>
+            <h3>🎯 Resultado Atualizado</h3>
+            <p><b>Paciente:</b> {ui.session_state['nome_paciente']}</p>
+            <p><b>Estratégia:</b> {ui.session_state['estrategia']}</p>
+            <p><b>Meta Dieta:</b> {ui.session_state['calorias']:.0f} kcal</p>
+            <p><b>Água:</b> {ui.session_state['agua']:.2f} L</p>
+            <p><b>Gasto Total (TDEE):</b> {ui.session_state['g_total']:.0f} kcal</p>
+            </div>""", unsafe_allow_html=True)
 
     with aba2:
         ui.header("Jackson & Pollock (7 Dobras)")
-        p_nome = ui.session_state.get('nome', 'Sem Paciente')
-        ui.subheader(f"Avaliação Corporal: {p_nome}")
+        ui.subheader(f"Avaliação Corporal: {ui.session_state.get('nome_paciente', 'Sem Paciente')}")
         
         ca1, ca2, ca3, ca4 = ui.columns(4)
-        dc_peit = ca1.number_input("Peitoral (mm)", 0.0, 100.0, 10.0)
-        dc_axil = ca2.number_input("Axilar (mm)", 0.0, 100.0, 12.0)
-        dc_tric = ca3.number_input("Tricep (mm)", 0.0, 100.0, 14.0)
-        dc_sube = ca4.number_input("Subescapular (mm)", 0.0, 100.0, 15.0)
+        dc_peit = ca1.number_input("Peitoral (mm)", 0.0, 100.0, 10.0, key='dc1')
+        dc_axil = ca2.number_input("Axilar (mm)", 0.0, 100.0, 12.0, key='dc2')
+        dc_tric = ca3.number_input("Tricep (mm)", 0.0, 100.0, 14.0, key='dc3')
+        dc_sube = ca4.number_input("Subescapular (mm)", 0.0, 100.0, 15.0, key='dc4')
         
         ca5, ca6, ca7 = ui.columns(3)
-        dc_supr = ca5.number_input("Suprailíaca (mm)", 0.0, 100.0, 18.0)
-        dc_abdo = ca6.number_input("Abdominal (mm)", 0.0, 100.0, 20.0)
-        dc_coxa = ca7.number_input("Coxa (mm)", 0.0, 100.0, 15.0)
+        dc_supr = ca5.number_input("Suprailíaca (mm)", 0.0, 100.0, 18.0, key='dc5')
+        dc_abdo = ca6.number_input("Abdominal (mm)", 0.0, 100.0, 20.0, key='dc6')
+        dc_coxa = ca7.number_input("Coxa (mm)", 0.0, 100.0, 15.0, key='dc7')
 
         if ui.button("Calcular Gordura Corporal"):
             soma = dc_peit + dc_axil + dc_tric + dc_sube + dc_supr + dc_abdo + dc_coxa
-            if sexo == "Masculino":
-                dc = 1.112 - (0.00043499 * soma) + (0.00000055 * (soma**2)) - (0.00028826 * idade)
+            if ui.session_state.get('sexo_paciente', 'Masculino') == "Masculino":
+                dc = 1.112 - (0.00043499 * soma) + (0.00000055 * (soma**2)) - (0.00028826 * ui.session_state.get('idade_paciente', 25))
             else:
-                dc = 1.097 - (0.00046971 * soma) + (0.00000056 * (soma**2)) - (0.00012828 * idade)
+                dc = 1.097 - (0.00046971 * soma) + (0.00000056 * (soma**2)) - (0.00012828 * ui.session_state.get('idade_paciente', 25))
             
             bf = ((4.95 / dc) - 4.50) * 100
-            p_peso = ui.session_state.get('peso', 70.0)
+            p_peso = ui.session_state.get('peso_paciente', 70.0)
             m_gorda = p_peso * (bf / 100)
             m_magra = p_peso - m_gorda
 
+            ui.session_state['bf'] = bf
+            ui.session_state['m_magra'] = m_magra
+            ui.session_state['m_gorda'] = m_gorda
+            ui.session_state['antropo_calculado'] = True
+
+        if ui.session_state.get('antropo_calculado', False):
             ui.markdown(f"""<div class='metric-card'>
-            <h3>📊 Composição Corporal</h3>
-            <p><b>Gordura (BF):</b> {bf:.1f}%</p>
-            <p><b>Massa Magra:</b> {m_magra:.1f} kg | <b>Massa Gorda:</b> {m_gorda:.1f} kg</p>
+            <h3>📊 Composição Corporal Gravada</h3>
+            <p><b>Gordura (BF):</b> {ui.session_state['bf']:.1f}%</p>
+            <p><b>Massa Magra:</b> {ui.session_state['m_magra']:.1f} kg</p>
+            <p><b>Massa Gorda:</b> {ui.session_state['m_gorda']:.1f} kg</p>
             </div>""", unsafe_allow_html=True)
 
     with aba3:
@@ -185,17 +185,12 @@ else:
             if 'calorias' in ui.session_state:
                 ui.info(f"🎯 Meta: {ui.session_state['calorias']:.0f} kcal | {ui.session_state['macros']}")
             
-            cafe = ui.text_area("☕ Café da Manhã:", value=ui.session_state.get('saved_cafe', ''))
-            almoco = ui.text_area("🍚 Almoço:", value=ui.session_state.get('saved_almo', ''))
-            lanche = ui.text_area("🍏 Lanche:", value=ui.session_state.get('saved_lanc', ''))
-            jantar = ui.text_area("🥗 Jantar:", value=ui.session_state.get('saved_jant', ''))
-            
-            if ui.button("Gravar Cardápio"):
-                ui.session_state['saved_cafe'] = cafe
-                ui.session_state['saved_almo'] = almoco
-                ui.session_state['saved_lanc'] = lanche
-                ui.session_state['saved_jant'] = jantar
-                ui.success("💾 Cardápio salvo com sucesso!")
+            # CHAVES ABAIXO DIRECIONAM O TEXTO DIRETO PARA A MEMÓRIA EM TEMPO REAL
+            ui.text_area("☕ Café da Manhã:", key='saved_cafe')
+            ui.text_area("🍚 Almoço:", key='saved_almo')
+            ui.text_area("🍏 Lanche:", key='saved_lanc')
+            ui.text_area("🥗 Jantar:", key='saved_jant')
+            ui.caption("💡 Tudo que você digita acima é salvo automaticamente!")
 
         with col_sub:
             ui.subheader("🔄 Substituições")
@@ -204,14 +199,14 @@ else:
 
     with aba4:
         ui.header("📚 Prontuário Clínico")
-        p_ativo = ui.session_state.get('nome', 'Nenhum')
+        p_ativo = ui.session_state.get('nome_paciente', '')
         
-        if p_ativo != 'Nenhum':
+        if p_ativo != '':
             m_cal = ui.session_state.get('g_total', 0)
             m_die = ui.session_state.get('calorias', 0)
-            est_n = ui.session_state.get('estrategia', '')
+            est_n = ui.session_state.get('estrategia', 'Não calculada')
             ag_pr = ui.session_state.get('agua', 0)
-            ma_pr = ui.session_state.get('macros', '')
+            ma_pr = ui.session_state.get('macros', 'Não calculado')
             
             c_f = ui.session_state.get('saved_cafe', 'Vazio')
             a_l = ui.session_state.get('saved_almo', 'Vazio')
@@ -222,4 +217,4 @@ else:
             ui.text_area("Visualização:", txt, height=250)
             ui.download_button("📥 Baixar Relatório", data=txt, file_name=f"WebDiet_{p_ativo}.txt")
         else:
-            ui.info("Preencha a Aba 1 para gerar o prontuário.")
+            ui.info("Preencha o Nome na Aba 1 para gerar o prontuário.")
