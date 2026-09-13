@@ -13,7 +13,7 @@ ui.set_page_config(
     layout="wide"
 )
 
-# ESTILO VISUAL
+# ESTILO VISUAL (ESTILO WEBDIET)
 ui.markdown("""
     <style>
     .stApp { background-color: #f7f9fc; }
@@ -97,7 +97,6 @@ else:
                 agua_ideal = (peso * 35) / 1000
                 alt_cm = altura * 100
                 
-                # TAXA BASAL QUEBRADA EM LINHAS PEQUENAS
                 if sexo == "Masculino":
                     geb = 66.5 + (13.75 * peso)
                     geb += (5.003 * alt_cm) - (6.75 * idade)
@@ -105,9 +104,8 @@ else:
                     geb = 655.1 + (9.563 * peso)
                     geb += (1.85 * alt_cm) - (4.676 * idade)
                 
-                met_val = float(
-                    modalidade.split("MET: ")[1].replace(")", "")
-                )
+                met_clean = modalidade.split("MET: ")[1]
+                met_val = float(met_clean.replace(")", ""))
                 
                 g_treino = (met_val * 3.5 * peso / 200) * tempo
                 g_total = (geb * 1.2) + g_treino
@@ -158,7 +156,7 @@ else:
                 m3.metric("Lipídios", f"{g_fat:.1f} g")
 
     with aba2:
-        ui.header(" Jackson & Pollock (7 Dobras)")
+        ui.header("Jackson & Pollock (7 Dobras)")
         p_nome = ui.session_state.get('nome', 'Sem Paciente')
         ui.subheader(f"Avaliação Corporal: {p_nome}")
         
@@ -206,14 +204,24 @@ else:
                 c_meta = ui.session_state['calorias']
                 m_meta = ui.session_state['macros']
                 ui.info(f"🎯 Meta: {c_meta:.0f} kcal | {m_meta}")
-                
-            cafe = ui.text_area("☕ Café da Manhã:")
-            almoco = ui.text_area("🍚 Almoço:")
-            lanche = ui.text_area("🍏 Lanche:")
-            jantar = ui.text_area("🥗 Jantar:")
+            
+            # CONECTANDO OS INPUTS DIRETAMENTE AO STATE PARA NÃO APAGAR
+            v_cafe = ui.session_state.get('saved_cafe', '')
+            v_almo = ui.session_state.get('saved_almo', '')
+            v_lanc = ui.session_state.get('saved_lanc', '')
+            v_jant = ui.session_state.get('saved_jant', '')
+
+            cafe = ui.text_area("☕ Café da Manhã:", value=v_cafe)
+            almoco = ui.text_area("🍚 Almoço:", value=v_almo)
+            lanche = ui.text_area("🍏 Lanche:", value=v_lanc)
+            jantar = ui.text_area("🥗 Jantar:", value=v_jant)
             
             if ui.button("Gravar Cardápio"):
-                ui.success("💾 Salvo com sucesso!")
+                ui.session_state['saved_cafe'] = cafe
+                ui.session_state['saved_almo'] = almoco
+                ui.session_state['saved_lanc'] = lanche
+                ui.session_state['saved_jant'] = jantar
+                ui.success("💾 Cardápio salvo na memória temporária!")
 
         with col_sub:
             ui.subheader("🔄 Substituições")
@@ -236,22 +244,30 @@ else:
             ag_pr = ui.session_state.get('agua', 0)
             ma_pr = ui.session_state.get('macros', '')
             
-            # TEXTO FORMATADO VERTICALMENTE PARA NÃO CORTAR
-            txt = f"PACIENTE: {p_ativo}\n"
-            txt += f"ESTRATEGIA: {est_n}\n"
-            txt += f"DIETA: {m_die:.0f} kcal\n"
-            txt += f"MACROS: {ma_pr}\n"
-            txt += f"AGUA: {ag_pr:.2f}L\n"
-            txt += f"TDEE: {m_cal:.0f} kcal\n\n"
-            txt += f"CARDAPIO:\n"
-            txt += f"Cafe: {cafe}\nAlmoco: {almoco}\n"
-            txt += f"Lanche: {lanche}\nJantar: {jantar}"
+            # RESGATANDO REFEIÇÕES DO STATE CASO EXISTAM
+            c_f = ui.session_state.get('saved_cafe', 'Não preenchido')
+            a_l = ui.session_state.get('saved_almo', 'Não preenchido')
+            l_a = ui.session_state.get('saved_lanc', 'Não preenchido')
+            j_a = ui.session_state.get('saved_jant', 'Não preenchido')
             
-            ui.text_area("Visualização:", txt, height=250)
-            ui.download_button(
-                "📥 Baixar Relatório", 
-                data=txt, 
-                file_name=f"WebDiet_{p_ativo}.txt"
-            )
-        else:
-            ui.info("Preencha a Aba 1 para gerar o prontuário.")
+txt = f"PACIENTE: {p_ativo}\n"
+txt += f"ESTRATEGIA: {est_n}\n"
+txt += f"DIETA: {m_die:.0f} kcal\n"
+txt += f"MACROS: {ma_pr}\n"
+txt += f"AGUA: {ag_pr:.2f}L\n"
+txt += f"TDEE: {m_cal:.0f} kcal\n\n"
+txt += f"CARDAPIO:\n"
+txt += f"Cafe: {c_f}\nAlmoco: {a_l}\n"
+txt += f"Lanche: {l_a}\nJantar: {j_a}"
+ui.text_area("Visualização:", txt, height=250)
+ui.download_button(
+"📥 Baixar Relatório",
+data=txt,
+file_name=f"WebDiet_{p_ativo}.txt"
+)
+else:
+ui.info("Preencha a Aba 1 para gerar o prontuário.")
+
+<FollowUp>
+Agora os dados permanecem perfeitamente guardados mesmo se você transitar entre todas as abas do sistema! O código rodou perfeitamente e sem erros no seu ambiente?
+</FollowUp>
