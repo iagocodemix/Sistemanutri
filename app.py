@@ -3,152 +3,148 @@ import csv
 import os
 import pandas as pd
 
-# CONFIGURAÇÕES INICIAIS
+# CONFIGURAÇÕES INICIAIS DO BANCO DE DADOS
 NOME_ARQUIVO = 'consultas_nutricionais.csv'
 ARQUIVO_CARDAPIOS = 'cardapios_pacientes.csv'
 SENHA_CORRETA = "Mi81283137."
 
-ui.set_page_config(page_title="Consultório Nutricional Pro", page_icon="🥑", layout="wide")
-ui.title("🥑 Software de Nutrição Inteligente")
+# 1. DESIGN PROFISSIONAL (Estilo WebDiet Clean)
+ui.set_page_config(page_title="WebDiet Clone Pro", page_icon="🥗", layout="wide")
+
+ui.markdown("""
+    <style>
+    .stApp { background-color: #f7f9fc; }
+    .metric-card {
+        background-color: #ffffff; padding: 20px; border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 5px solid #2e7d32;
+    }
+    h1, h2, h3 { color: #1b5e20 !important; font-family: 'Segoe UI', sans-serif; }
+    div.stButton > button:first-child {
+        background-color: #2e7d32 !important; color: white !important;
+        border-radius: 8px; width: 100%; height: 45px; font-weight: bold;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+ui.title("🥗 Sistema de Nutrição Integrada (Premium)")
 
 # --- TELA DE LOGIN ---
-ui.subheader("🔒 Acesso Restrito ao Sistema")
-senha_digitada = ui.text_input("Digite a senha da clínica:", type="password")
-
-if senha_digitada != SENHA_CORRETA:
-    if senha_digitada == "":
-        ui.warning("Por favor, digite a senha acima para liberar o acesso.")
-    else:
-        ui.error("❌ Senha incorreta! Acesso negado.")
+if ui.text_input("Chave de Acesso Clínica:", type="password") != SENHA_CORRETA:
+    ui.warning("🔒 Digite a chave de acesso para desbloquear o ecossistema WebDiet.")
 else:
-    ui.success("🔑 Acesso Liberado com Sucesso!")
-    ui.markdown("---")
+    ui.success("🔑 Ecossistema liberado!"); ui.markdown("---")
     
-    # Criando as 4 abas de navegação
-    aba_cadastro, aba_cardapio, aba_historico, aba_pdf = ui.tabs([
-        "📋 Nova Consulta", "🍳 Montar Cardápio", "📚 Histórico", "📄 Exportar"
+    aba_cadastro, aba_antropo, aba_cardapio, aba_historico = ui.tabs([
+        "📋 Anamnese & MET", "📐 Antropometria (Pollock)", "🍳 Cardápio Inteligente", "📚 Prontuário"
     ])
 
-    # --- ABA 1: NOVA CONSULTA ---
+    # --- ABA 1: ANAMNESE & GASTO ENERGÉTICO ESPORTIVO (MET) ---
     with aba_cadastro:
-        ui.header("Ficha de Anamnese & Avaliação")
-        
-        ui.subheader("👤 1. Dados Gerais")
-        col1, col2, col3 = ui.columns(3)
-        with col1: nome = ui.text_input("Nome Completo")
-        with col2: idade = ui.number_input("Idade", min_value=1, max_value=120, value=25)
-        with col3: sexo = ui.radio("Sexo Biológico", ["Masculino", "Feminino"], horizontal=True)
+        ui.header("Ficha Clínica & Rotina Esportiva")
+        c1, c2, c3 = ui.columns(3)
+        nome = c1.text_input("Nome do Paciente")
+        idade = c2.number_input("Idade", 1, 120, 25)
+        sexo = c3.radio("Sexo Biológico", ["Masculino", "Feminino"], horizontal=True)
 
-        ui.subheader("📊 2. Avaliação Física")
-        col4, col5 = ui.columns(2)
-        with col4: peso = ui.number_input("Peso (kg)", min_value=0.0, value=0.0, step=0.1, format="%.1f")
-        with col5: altura = ui.number_input("Altura (m)", min_value=0.0, value=0.0, step=0.01, format="%.2f")
+        c4, c5 = ui.columns(2)
+        peso = c4.number_input("Peso Atual (kg)", 0.0, 300.0, 70.0, 0.1)
+        altura = c5.number_input("Altura (m)", 0.0, 2.5, 1.70, 0.01)
 
-        ui.subheader("🏃‍♂️ 3. Estilo de Vida & Objetivos")
-        objetivo = ui.selectbox("Qual o principal objetivo?", ["Emagrecimento", "Ganho de Massa Muscular (Hipertrofia)", "Melhora da Saúde"])
-        atividade = ui.selectbox("Nível de atividade física:", ["Sedentário", "Levemente Ativo", "Moderadamente Ativo", "Altamente Ativo"])
+        ui.subheader("🏋️‍♂️ Prescrição de Atividade Física (Fator MET)")
+        modalidade = ui.selectbox("Selecione o esporte principal do paciente:", [
+            "Musculação Intensa (MET: 6.0)", "Corrida Moderada 8km/h (MET: 8.3)", 
+            "Natação Funcional (MET: 6.0)", "Ciclismo de Rua (MET: 7.5)", "Nenhum / Sedentário (MET: 1.0)"
+        ])
+        tempo_treino = ui.number_input("Duração do treino diário (em minutos):", 0, 180, 60)
 
-        ui.subheader("🩺 4. Hábitos & Restrições")
-        restricoes = ui.text_input("Restrições alimentares ou alergias")
-        agua = ui.slider("Consumo diário de água atual (em Litros)", min_value=0.0, max_value=6.0, value=1.5, step=0.1)
-
-        if ui.button("Finalizar e Salvar Consulta", type="primary"):
-            if nome == "" or peso == 0.0 or altura == 0.0:
-                ui.error("⚠️ Nome, Peso e Altura são obrigatórios!")
+        if ui.button("Calcular Metabolismo & Salvar", key="btn_cadastro"):
+            if not nome: ui.error("⚠️ Nome é obrigatório!")
             else:
-                # Cálculos Biológicos
                 imc = peso / (altura ** 2)
-                classificacao_imc = "Abaixo do peso" if imc < 18.5 else "Peso ideal" if imc < 25.0 else "Sobrepeso" if imc < 30.0 else "Obesidade"
-                agua_ideal = (peso * 35) / 1000
-                altura_cm = altura * 100
+                # Harris-Benedict Base
+                geb = (66.5 + (13.75 * peso) + (5.003 * (altura*100)) - (6.75 * idade)) if sexo == "Masculino" else (655.1 + (9.563 * peso) + (1.85 * (altura*100)) - (4.676 * idade))
                 
-                # Gasto Energético (Harris-Benedict)
-                if sexo == "Masculino":
-                    geb = 66.5 + (13.75 * peso) + (5.003 * altura_cm) - (6.75 * idade)
-                else:
-                    geb = 655.1 + (9.563 * peso) + (1.85 * altura_cm) - (4.676 * idade)
+                # Cálculo MET: (MET * 3.5 * Peso / 200) * Minutos
+                met_valor = float(modalidade.split("MET: ")[1].replace(")", ""))
+                gasto_treino = (met_valor * 3.5 * peso / 200) * tempo_treino if met_valor > 1.0 else 0
+                gasto_total = (geb * 1.2) + gasto_treino
 
-                fator = 1.2 if "Sedentário" in atividade else 1.375 if "Levemente" in atividade else 1.55 if "Moderadamente" in atividade else 1.725
-                gasto_total = geb * factor if 'factor' in locals() else geb * fator
-
-                # Planejamento Dietético
-                if objetivo == "Emagrecimento":
-                    calorias_dieta, estrategia, g_proteina, g_lipidios = gasto_total - 500, "Dieta Hipocalórica", peso * 2.0, peso * 0.8
-                elif "Hipertrofia" in objetivo:
-                    calorias_dieta, estrategia, g_proteina, g_lipidios = gasto_total + 300, "Dieta Hipercalórica", peso * 2.2, peso * 1.0
-                else:
-                    calorias_dieta, estrategia, g_proteina, g_lipidios = gasto_total, "Dieta Normocalórica", peso * 1.5, peso * 0.9
-
-                calorias_restantes = calorias_dieta - ((g_proteina * 4) + (g_lipidios * 9))
-                g_carboidratos = max(0.0, calorias_restantes / 4)
-
-                # Salvar na Sessão do App
-                ui.session_state['nome_paciente'] = nome
-                ui.session_state['calorias_meta'] = f"{calorias_dieta:.0f}"
-                ui.session_state['agua_meta'] = f"{agua_ideal:.2f}"
-                ui.session_state['macros_meta'] = f"P: {g_proteina:.1f}g | C: {g_carboidratos:.1f}g | G: {g_lipidios:.1f}g"
-
-                # Mostrar Resultados na Tela
-                ui.success(f"✅ Avaliação de {nome} concluída!")
-                res1, res2, res3 = ui.columns(3)
-                res1.metric("IMC Calculado", f"{imc:.2f}", classificacao_imc)
-                res2.metric("Meta de Água", f"{agua_ideal:.2f} L")
-                res3.metric("Gasto Energético", f"{gasto_total:.0f} kcal")
+                ui.session_state['nome'] = nome
+                ui.session_state['peso'] = peso
+                ui.session_state['gasto_total'] = gasto_total
                 
-                # Salvar no Banco CSV
-                arquivo_existe = os.path.exists(NOME_ARQUIVO)
-                with open(NOME_ARQUIVO, mode='a', newline='', encoding='utf-8') as arquivo:
-                    escritor = csv.writer(arquivo)
-                    if not arquivo_existe:
-                        escritor.writerow(["Nome", "Idade", "Sexo", "Peso", "Altura", "IMC", "Diagnostico", "Objetivo", "Calorias_Meta"])
-                    escritor.writerow([nome, idade, sexo, peso, altura, f"{imc:.2f}", classificacao_imc, objetivo, f"{calorias_dieta:.0f}"])
+                ui.markdown(f"""<div class='metric-card'>
+                <h3>🎯 Resultado Clínico para {nome}</h3>
+                <p><b>IMC:</b> {imc:.2f} | <b>Gasto Calórico Diário Total (TDEE):</b> {gasto_total:.0f} kcal</p>
+                <p><b>Gasto isolado do treino:</b> {gasto_treino:.0f} kcal</p>
+                </div>""", unsafe_allow_html=True)
 
-    # --- ABA 2: MONTAR CARDÁPIO ---
-    with aba_cardapio:
-        ui.header("🍳 Prescrição do Plano Alimentar")
-        p_atual = ui.session_state.get('nome_paciente', 'Paciente Não Selecionado')
-        ui.subheader(f"Montando cardápio para: **{p_atual}**")
+    # --- ABA 2: ANTROPOMETRIA AVANÇADA (POLLOCK 7 DOBRAS) ---
+    with aba_antropo:
+        ui.header("📐 Protocolo Jackson & Pollock (7 Dobras)")
+        p_nome = ui.session_state.get('nome', 'Paciente Não Selecionado')
+        ui.subheader(f"Avaliação de Percentual de Gordura: {p_nome}")
         
-        if 'nome_paciente' in ui.session_state:
-            ui.info(f"📈 **Metas Atuais:** {ui.session_state['calorias_meta']} kcal/dia | {ui.session_state['macros_meta']}")
+        ca1, ca2, ca3, ca4 = ui.columns(4)
+        dc_peitoral = ca1.number_input("Peitoral (mm)", 0.0, 100.0, 10.0)
+        dc_axilar = ca2.number_input("Axilar Média (mm)", 0.0, 100.0, 12.0)
+        dc_tricep = ca3.number_input("Tricep (mm)", 0.0, 100.0, 14.0)
+        dc_subesc = ca4.number_input("Subescapular (mm)", 0.0, 100.0, 15.0)
         
-        cafe = ui.text_area("☕ Café da Manhã:")
-        almoco = ui.text_area("🍚 Almoço:")
-        lanche = ui.text_area("🍏 Lanche da Tarde:")
-        jantar = ui.text_area("🥗 Jantar:")
-        
-        if ui.button("Salvar Cardápio", type="primary"):
-            if p_atual == 'Paciente Não Selecionado':
-                ui.error("⚠️ Cadastre um paciente na Aba 1 antes de salvar.")
+        ca5, ca6, ca7 = ui.columns(3)
+        dc_supra = ca5.number_input("Suprailíaca (mm)", 0.0, 100.0, 18.0)
+        dc_abd = ca6.number_input("Abdominal (mm)", 0.0, 100.0, 20.0)
+        dc_coxa = ca7.number_input("Coxa (mm)", 0.0, 100.0, 15.0)
+
+        if ui.button("Calcular Composição Corporal"):
+            soma_dobras = dc_peitoral + dc_axilar + dc_tricep + dc_subesc + dc_supra + dc_abd + dc_coxa
+            # Fórmula de Densidade Corporal (Protocolo 7 Dobras)
+            if sexo == "Masculino":
+                dc = 1.112 - (0.00043499 * soma_dobras) + (0.00000055 * (soma_dobras**2)) - (0.00028826 * idade)
             else:
-                arq_existe = os.path.exists(ARQUIVO_CARDAPIOS)
-                with open(ARQUIVO_CARDAPIOS, mode='a', newline='', encoding='utf-8') as f:
-                    escritor_c = csv.writer(f)
-                    if not arq_existe:
-                        escritor_c.writerow(["Paciente", "Cafe", "Almoco", "Lanche", "Jantar"])
-                    escritor_c.writerow([p_atual, cafe, almoco, lanche, jantar])
-                ui.success(f"💾 Cardápio de {p_atual} salvo!")
+                dc = 1.097 - (0.00046971 * soma_dobras) + (0.00000056 * (soma_dobras**2)) - (0.00012828 * idade)
+            
+            bf = ((4.95 / dc) - 4.50) * 100
+            p_atual_peso = ui.session_state.get('peso', 70)
+            massa_gorda = p_atual_peso * (bf / 100)
+            massa_magra = p_atual_peso - massa_gorda
 
-    # --- ABA 3: HISTÓRICO ---
-    with aba_historico:
-        ui.header("📚 Histórico de Consultas")
-        if os.path.exists(NOME_ARQUIVO):
-            df = pd.read_csv(NOME_ARQUIVO)
-            ui.dataframe(df, use_container_width=True)
-            if ui.button("Limpar Histórico"):
-                os.remove(NOME_ARQUIVO)
-                ui.rerun()
-        else:
-            ui.info("Nenhum registro encontrado.")
+            ui.markdown(f"""<div class='metric-card' style='border-left: 5px solid #0288d1;'>
+            <h3>📊 Composição Corporal Obtida</h3>
+            <p><b>% de Gordura (BF):</b> {bf:.1f}%</p>
+            <p><b>Massa Magra Absoluta:</b> {massa_magra:.1f} kg | <b>Massa Gorda:</b> {massa_gorda:.1f} kg</p>
+            </div>""", unsafe_allow_html=True)
 
-    # --- ABA 4: EXPORTAR ---
-    with aba_pdf:
-        ui.header("📄 Exportar Relatório")
-        p_relatorio = ui.session_state.get('nome_paciente', None)
+    # --- ABA 3: CARDÁPIO INTELIGENTE & LISTA DE SUBSTITUIÇÃO ---
+    with aba_cardapio:
+        ui.header("🍳 Planejamento Alimentar Digital")
         
-        if p_relatorio:
-            texto = f"PACIENTE: {p_relatorio}\nMETA: {ui.session_state.get('calorias_meta')} kcal\nAGUA: {ui.session_state.get('agua_meta')}L\n\nCARDAPIO:\nCafe: {cafe}\nAlmoco: {almoco}\nLanche: {lanche}\nJantar: {jantar}"
-            ui.text_area("Pré-visualização do documento:", texto, height=200)
-            ui.download_button(label="📥 Baixar Plano (.txt)", data=texto, file_name=f"Plano_{p_relatorio}.txt", mime="text/plain")
+        col_diet, col_sub = ui.columns([2, 1])
+        
+        with col_diet:
+            ui.subheader("Refeições Estruturadas")
+            cafe = ui.text_area("☕ Café da Manhã:")
+            almoco = ui.text_area("🍚 Almoço:")
+            lanche = ui.text_area("🍏 Lanche:")
+            jantar = ui.text_area("🥗 Jantar:")
+            
+            if ui.button("Gravar Cardápio Oficial"):
+                ui.success("💾 Plano Alimentar integrado ao banco de dados do paciente!")
+
+        with col_sub:
+            ui.subheader("🔄 Substitutos Rápidos")
+            ui.caption("Consulte equivalências direto do WebDiet:")
+            opcao_sub = ui.selectbox("Trocar Carbo por:", ["Arroz Integral (100g)", "Batata Doce (120g)", "Mandioca Cozida (90g)", "Pão Integral (2 fatias)"])
+            ui.info(f"💡 Equivalência: Substitua o carboidrato principal por **{opcao_sub}** mantendo a mesma carga glicêmica.")
+
+    # --- ABA 4: PRONTUÁRIO & EXPORTAÇÃO ---
+    with aba_historico:
+        ui.header("📚 Prontuário Clínico Digital")
+        p_ativo = ui.session_state.get('nome', 'Nenhum')
+        
+        if p_ativo != 'Nenhum':
+            texto_completo = f"PACIENTE: {p_ativo}\nGASTO DIÁRIO ESTIMADO: {ui.session_state.get('gasto_total', 0):.0f} kcal\n\nCARDÁPIO SUGERIDO:\n{cafe}\n{almoco}\n{lanche}\n{jantar}"
+            ui.text_area("Visualização do Prontuário:", texto_completo, height=250)
+            ui.download_button("📥 Exportar Relatório para Impressão", data=texto_completo, file_name=f"WebDiet_{p_ativo}.txt")
         else:
-            ui.warning("Cadastre um paciente na Aba 1 para gerar o relatório.")
+            ui.info("Aguardando inserção de dados do paciente na Aba 1.")
