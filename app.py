@@ -125,7 +125,7 @@ else:
             m1.metric("Proteínas", f"{ui.session_state['gp']:.1f} g")
             m2.metric("Carboidratos", f"{ui.session_state['gc']:.1f} g")
             m3.metric("Lipídios", f"{ui.session_state['gf']:.1f} g")
-        with t2:
+            with t2:
         ui.header("Jackson & Pollock (7 Dobras)")
         ui.subheader(f"Paciente: {ui.session_state.get('n_p', 'Nenhum')}")
         
@@ -272,3 +272,5 @@ else:
             ui.download_button("📥 Baixar TXT", data=txt, file_name=f"WebDiet_{p_ativo}.txt")
         else:
             ui.info("Preencha o Nome na Aba 1.")
+
+       
