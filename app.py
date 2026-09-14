@@ -52,7 +52,6 @@ else:
     with aba1:
         ui.header("Ficha Clínica & Rotina Esportiva")
         c1, c2, c3 = ui.columns(3)
-        # CHAVES FIXAS TRAVAM OS DADOS DO PACIENTE AO MUDAR DE ABA
         nome = c1.text_input("Nome do Paciente", key='nome_paciente')
         idade = c2.number_input("Idade", 1, 120, 25, key='idade_paciente')
         sexo = c3.radio("Sexo Biológico", ["Masculino", "Feminino"], horizontal=True, key='sexo_paciente')
@@ -94,8 +93,9 @@ else:
                 else:
                     geb = 655.1 + (9.563 * peso) + (1.85 * alt_cm) - (4.676 * idade)
                 
+                # CORREÇÃO AQUI: Acessando o índice [1] da lista criada pelo split
                 partes = modalidade.split("MET: ")
-                met_val = float(partes.replace(")", ""))
+                met_val = float(partes[1].replace(")", ""))
                 
                 g_treino = (met_val * 3.5 * peso / 200) * tempo
                 g_total = (geb * 1.2) + g_treino
@@ -125,7 +125,6 @@ else:
                 ui.session_state['macros'] = f"P: {g_prot:.1f}g | C: {g_carb:.1f}g | G: {g_fat:.1f}g"
                 ui.session_state['calculado'] = True
 
-        # MOSTRA RESULTADOS SE JÁ TIVER SIDO CALCULADO UMA VEZ
         if ui.session_state.get('calculado', False):
             ui.markdown(f"""<div class='metric-card'>
             <h3>🎯 Resultado Atualizado</h3>
@@ -185,7 +184,6 @@ else:
             if 'calorias' in ui.session_state:
                 ui.info(f"🎯 Meta: {ui.session_state['calorias']:.0f} kcal | {ui.session_state['macros']}")
             
-            # CHAVES ABAIXO DIRECIONAM O TEXTO DIRETO PARA A MEMÓRIA EM TEMPO REAL
             ui.text_area("☕ Café da Manhã:", key='saved_cafe')
             ui.text_area("🍚 Almoço:", key='saved_almo')
             ui.text_area("🍏 Lanche:", key='saved_lanc')
