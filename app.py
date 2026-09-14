@@ -12,7 +12,6 @@ ui.set_page_config(
     layout="wide"
 )
 
-# ESTILO VISUAL EM LINHAS SUPER CURTAS
 ui.markdown("""
     <style>
     .stApp { background-color: #f7f9fc; }
@@ -42,17 +41,8 @@ else:
         "📋 Anamnese & MET", "📐 Antropometria", 
         "🍳 Cardápio", "📚 Histórico", "📄 Prontuário"
     ])
-
     with t1:
         ui.header("Ficha Clínica")
-        
-        if ui.button("➕ Nova Ficha / Próximo Paciente"):
-            for k in list(ui.session_state.keys()): 
-                ui.session_state[k] = ""
-            ui.session_state['calc'] = False
-            ui.session_state['ant'] = False
-            ui.rerun()
-            
         c1, c2, c3 = ui.columns(3)
         nome = c1.text_input("Nome", key='n_p')
         idade = c2.number_input("Idade", 1, 120, 25, key='i_p')
@@ -86,16 +76,11 @@ else:
                 alt_cm = alt * 100
                 
                 if sexo == "M":
-                    geb = 66.5 + (13.75 * peso) + \
-                          (5.003 * alt_cm) - (6.75 * idade)
+                    geb = 66.5 + (13.75 * peso) + (5.003 * alt_cm) - (6.75 * idade)
                 else:
-                    geb = 655.1 + (9.563 * peso) + \
-                          (1.85 * alt_cm) - (4.676 * idade)
+                    geb = 655.1 + (9.563 * peso) + (1.85 * alt_cm) - (4.676 * idade)
                 
-                # STRING EXTRACTOR DO MET CORRIGIDO
-                met_str = mod.split("MET: ")[1]
-                val_met = float(met_str.replace(")", ""))
-                
+                val_met = float(mod.split("MET: ")[1].replace(")", ""))
                 g_treino = (val_met * 3.5 * peso / 200) * tempo
                 g_total = (geb * 1.2) + g_treino
 
@@ -123,7 +108,7 @@ else:
                     if not existe:
                         esc.writerow(["Nome", "Idade", "Sexo", "Peso", "Alt", "Obj", "Est", "Kcal", "Agua"])
                     esc.writerow([nome, idade, sexo, peso, alt, obj, est, f"{kc:.0f}", f"{agua:.2f}"])
-                ui.success("💾 Salvo no histórico!")
+                ui.success("💾 Salvo no histórico permanente!")
 
         if ui.session_state.get('calc', False) and ui.session_state.get('n_p', ''):
             ui.markdown(f"""<div class='metric-card'>
@@ -140,7 +125,6 @@ else:
             m1.metric("Proteínas", f"{ui.session_state['gp']:.1f} g")
             m2.metric("Carboidratos", f"{ui.session_state['gc']:.1f} g")
             m3.metric("Lipídios", f"{ui.session_state['gf']:.1f} g")
-
     with t2:
         ui.header("Jackson & Pollock (7 Dobras)")
         ui.subheader(f"Paciente: {ui.session_state.get('n_p', 'Nenhum')}")
@@ -160,11 +144,9 @@ else:
             soma = dc1 + dc2 + dc3 + dc4 + dc5 + dc6 + dc7
             id_p = ui.session_state.get('i_p', 25)
             if ui.session_state.get('s_p', 'M') == "M":
-                dc = 1.112 - (0.00043499 * soma) + \
-                     (0.00000055 * (soma**2)) - (0.00028826 * id_p)
+                dc = 1.112 - (0.00043499 * soma) + (0.00000055 * (soma**2)) - (0.00028826 * id_p)
             else:
-                dc = 1.097 - (0.00046971 * soma) + \
-                     (0.00000056 * (soma**2)) - (0.00012828 * id_p)
+                dc = 1.097 - (0.00046971 * soma) + (0.00000056 * (soma**2)) - (0.00012828 * id_p)
             
             bf = ((4.95 / dc) - 4.50) * 100
             p_w = ui.session_state.get('p_p', 70.0)
@@ -185,7 +167,7 @@ else:
             </div>""", unsafe_allow_html=True)
 
     with t3:
-        ui.header("🍳 Plano Alimentar")
+        ui.header("🍳 Plano Alimentar & Modelos Prontos")
         col_diet, col_sub = ui.columns(2)
         
         with col_diet:
@@ -199,12 +181,33 @@ else:
             ui.text_area("🥗 Jantar:", key='sv_jant')
 
         with col_sub:
-            ui.subheader("🔄 Substituições")
-            opcao_sub = ui.selectbox("Trocar por:", ["Arroz Integral (100g)", "Batata Doce (120g)", "Mandioca (90g)", "Pão Integral (2 fat)"])
-            ui.info(f"💡 Sugestão: Use **{opcao_sub}**.")
+            ui.subheader("📚 Modelos Injetáveis")
+            modelo = ui.selectbox("Escolha um Protocolo Clínico Base:", [
+                "Nenhum", "Idosos (Perda de Peso)", 
+                "Diabéticos (Controle)", "Hipertrofia"
+            ])
+            
+            if ui.button("Injetar Modelo"):
+                if "Idosos" in modelo:
+                    ui.session_state['sv_cafe'] = "Omelete (2 ovos) + Aveia + Mamão com chia."
+                    ui.session_state['sv_almo'] = "Frango grelhado + Arroz integral + Purê + Brócolis."
+                    ui.session_state['sv_lanc'] = "Iogurte natural desnatado + 3 castanhas."
+                    ui.session_state['sv_jant'] = "Sopa caseira de legumes com carne magra."
+                elif "Diabetes" in modelo:
+                    ui.session_state['sv_cafe'] = "Pão integral centeio + Queijo branco + Café sem açúcar."
+                    ui.session_state['sv_almo'] = "Peixe assado + Mix folhas verdes + Lentilha."
+                    ui.session_state['sv_lanc'] = "Abacate amassado com sementes de girassol."
+                    ui.session_state['sv_jant'] = "Omelete de espinafre + Salada de tomate."
+                elif "Hipertrofia" in modelo:
+                    ui.session_state['sv_cafe'] = "4 ovos + 2 fatias de pão integral + Vitamina de banana."
+                    ui.session_state['sv_almo'] = "Arroz branco (250g) + Feijão + Patinho moído (150g)."
+                    ui.session_state['sv_lanc'] = "Whey protein + 50g farelo aveia + 1 maçã."
+                    ui.session_state['sv_jant'] = "Macarrão + Frango desfiado (150g) + Molho natural."
+                ui.success("⚡ Modelo aplicado com sucesso!")
+                ui.rerun()
 
     with t4:
-        ui.header("📚 Banco de Dados")
+        ui.header("📚 Banco de Dados Permanente")
         if os.path.exists(ARQ):
             ui.dataframe(pd.read_csv(ARQ), use_container_width=True)
             if ui.button("Apagar Histórico"):
@@ -214,7 +217,7 @@ else:
             ui.info("Sem registros no arquivo CSV.")
 
     with t5:
-        ui.header("📚 Prontuário")
+        ui.header("📚 Prontuário para Impressão")
         p_ativo = ui.session_state.get('n_p', '')
         
         if p_ativo != '':
