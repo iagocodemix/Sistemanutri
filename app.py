@@ -12,7 +12,6 @@ ui.set_page_config(
     layout="wide"
 )
 
-# DESIGN PROFISSIONAL COMPACTO
 ui.markdown("""
     <style>
     .stApp { background-color: #f7f9fc; }
@@ -37,6 +36,7 @@ if pass_in != SENHA:
     ui.warning("🔒 Chave clínica requerida.")
 else:
     ui.success("🔑 Liberado!")
+    ui.markdown("---")
     
     t1, t2, t3, t4, t5 = ui.tabs([
         "📋 Anamnese & MET", "📐 Antropometria", 
@@ -81,9 +81,8 @@ else:
                 else:
                     geb = 655.1 + (9.563 * peso) + (1.85 * alt_cm) - (4.676 * idade)
                 
-                # CÁLCULO SEGURO DO MET TRATANDO A STRING CORRETAMENTE
-                partes = mod.split("MET: ")
-                val_met = float(partes[1].replace(")", ""))
+                # CORREÇÃO DO CÁLCULO DO MET
+                val_met = float(mod.split("MET: ")[1].replace(")", ""))
                 g_treino = (val_met * 3.5 * peso / 200) * tempo
                 g_total = (geb * 1.2) + g_treino
 
@@ -173,63 +172,64 @@ else:
         ui.header("🍳 Plano Alimentar & Modelos")
         col_diet, col_sub = ui.columns(2)
         
+        with col_sub:
+            ui.subheader("📚 Biblioteca de Modelos")
+            modelo = ui.selectbox("Escolha um Protocolo:", [
+                "Nenhum", "Idosos (Perda de Peso)", 
+                "Diabéticos (Controle)", "Hipertrofia Padr",
+                "Vegetariano/Vegano", "Gestante Padrao",
+                "Hipertensao DASH", "Low Carb Estruturado"
+            ])
+            
+            if ui.button("Injetar Modelo"):
+                if "Idosos" in modelo:
+                    ui.session_state['sv_cafe'] = "Omelete (2 ovos) + Aveia + Mamao."
+                    ui.session_state['sv_almo'] = "Frango + Arroz integral + Pure + Brocolis."
+                    ui.session_state['sv_lanc'] = "Iogurte desnatado + 3 castanhas."
+                    ui.session_state['sv_jant'] = "Sopa de legumes com carne magra."
+                elif "Diabetes" in modelo:
+                    ui.session_state['sv_cafe'] = "Pao integral + Queijo branco + Cafe."
+                    ui.session_state['sv_almo'] = "Peixe assado + Folhas verdes + Lentilha."
+                    ui.session_state['sv_lanc'] = "Abacate com sementes de girassol."
+                    ui.session_state['sv_jant'] = "Omelete de espinafre + Tomate."
+                elif "Hipertrofia" in modelo:
+                    ui.session_state['sv_cafe'] = "4 ovos + Pao integral + Vitamina banana."
+                    ui.session_state['sv_almo'] = "Arroz branco + Feijao + Patinho."
+                    ui.session_state['sv_lanc'] = "Whey protein + Aveia + 1 maca."
+                    ui.session_state['sv_jant'] = "Macarrao + Frango + Molho natural."
+                elif "Vegetariano" in modelo:
+                    ui.session_state['sv_cafe'] = "Tofu mexido + Torrada + Suco verde."
+                    ui.session_state['sv_almo'] = "Arroz integral + Grao-de-bico."
+                    ui.session_state['sv_lanc'] = "Mix de sementes + Frutas vermelhas."
+                    ui.session_state['sv_jant'] = "Creme de ervilha com cubos de tofu."
+                elif "Gestante" in modelo:
+                    ui.session_state['sv_cafe'] = "Iogurte + Morango + Aveia + 1 ovo."
+                    ui.session_state['sv_almo'] = "Alcatra + Arroz + Feijao + Espinafre."
+                    ui.session_state['sv_lanc'] = "1 banana com semente de linhaça."
+                    ui.session_state['sv_jant'] = "Salmon + Batata inglesa assada."
+                elif "Hipertensao" in modelo:
+                    ui.session_state['sv_cafe'] = "Mingau de aveia com leite desnatado."
+                    ui.session_state['sv_almo'] = "Peito de frango + Arroz integral."
+                    ui.session_state['sv_lanc'] = "Melão picado + Amêndoas sem sal."
+                    ui.session_state['sv_jant'] = "Filé de pescada com tomate."
+                elif "Low Carb" in modelo:
+                    ui.session_state['sv_cafe'] = "Ovos mexidos e fatias de abacate."
+                    ui.session_state['sv_almo'] = "Contrafile + Abobrinha ao pesto."
+                    ui.session_state['sv_lanc'] = "Lascas de coco + Castanhas."
+                    ui.session_state['sv_jant'] = "Frango assado + Rúcula e parmesão."
+                ui.success("⚡ Modelo aplicado! Altere ou salve.")
+                ui.rerun()
+
         with col_diet:
             ui.subheader("Refeições")
             if ui.session_state.get('calc', False):
                 ui.info(f"🎯 Meta: {ui.session_state['calorias']:.0f} kcal")
             
-            ui.text_area("☕ Café da Manhã:", key='sv_cafe')
-            ui.text_area("🍚 Almoço:", key='sv_almo')
-            ui.text_area("🍏 Lanche:", key='sv_lanc')
-            ui.text_area("🥗 Jantar:", key='sv_jant')
-
-        with col_sub:
-            ui.subheader("📚 Biblioteca de Modelos")
-            modelo = ui.selectbox("Escolha um Protocolo:", [
-                "Nenhum", "Idosos (Perda de Peso)", 
-                "Diabéticos (Controle)", "Hipertrofia Padrão",
-                "Vegetariano/Vegano", "Gestante Padrão",
-                "Hipertensão (DASH)", "Low Carb Estruturado"
-            ])
-            
-            if ui.button("Injetar Modelo"):
-                if "Idosos" in modelo:
-                    ui.session_state['sv_cafe'] = "Omelete (2 ovos) + Aveia + Mamão com chia."
-                    ui.session_state['sv_almo'] = "Frango grelhado + Arroz integral + Purê + Brócolis."
-                    ui.session_state['sv_lanc'] = "Iogurte natural desnatado + 3 castanhas."
-                    ui.session_state['sv_jant'] = "Sopa caseira de legumes com carne magra."
-                elif "Diabetes" in modelo:
-                    ui.session_state['sv_cafe'] = "Pão integral centeio + Queijo branco + Café sem açúcar."
-                    ui.session_state['sv_almo'] = "Peixe assado + Mix folhas verdes + Lentilha."
-                    ui.session_state['sv_lanc'] = "Abacate amassado com sementes de girassol."
-                    ui.session_state['sv_jant'] = "Omelete de espinafre + Salada de tomate."
-                elif "Hipertrofia" in modelo:
-                    ui.session_state['sv_cafe'] = "4 ovos + 2 fatias de pão integral + Vitamina de banana."
-                    ui.session_state['sv_almo'] = "Arroz branco (250g) + Feijão + Patinho moído (150g)."
-                    ui.session_state['sv_lanc'] = "Whey protein + 50g farelo aveia + 1 maçã."
-                    ui.session_state['sv_jant'] = "Macarrão + Frango desfiado (150g) + Molho natural."
-                elif "Vegetariano" in modelo:
-                    ui.session_state['sv_cafe'] = "Tofu mexido com cúrcuma + Torrada integral + Suco verde."
-                    ui.session_state['sv_almo'] = "Arroz integral + Feijão preto + Hambúrguer de grão-de-bico."
-                    ui.session_state['sv_lanc'] = "Mix de sementes (abóbora e girassol) + Frutas vermelhas."
-                    ui.session_state['sv_jant'] = "Creme de ervilha com cubos de tofu grelhado."
-                elif "Gestante" in modelo:
-                    ui.session_state['sv_cafe'] = "Iogurte natural batido com morango + Aveia + 1 ovo cozido."
-                    ui.session_state['sv_almo'] = "Alcatra magra + Arroz + Feijão + Espinafre cozido."
-                    ui.session_state['sv_lanc'] = "1 banana prata com 1 colher de sopa de semente de linhaça."
-                    ui.session_state['sv_jant'] = "Filé de salmão grelhado + Batata inglesa assada com casca."
-                elif "Hipertensão" in modelo:
-                    ui.session_state['sv_cafe'] = "Mingau de aveia com leite desnatado e rodelas de banana."
-                    ui.session_state['sv_almo'] = "Peito de frango com ervas + Arroz integral + Alface."
-                    ui.session_state['sv_lanc'] = "Uma porção de melão picado + Amêndoas sem sal."
-                    ui.session_state['sv_jant'] = "Filé de pescada ao forno com tomate e cebola."
-                elif "Low Carb" in modelo:
-                    ui.session_state['sv_cafe'] = "Ovos mexidos na manteiga e fatias de abacate."
-                    ui.session_state['sv_almo'] = "Contrafilé grelhado + Espaguete de abobrinha ao pesto."
-                    ui.session_state['sv_lanc'] = "Lascas de coco seco + Mix de castanhas."
-                    ui.session_state['sv_jant'] = "Frango assado + Salada de rúcula com queijo parmesão."
-                ui.success("⚡ Modelo aplicado com sucesso!")
-                ui.rerun()
+            # ADICIONADO VALUE PADRÃO VINDO DO SESSION STATE
+            cafe = ui.text_area("☕ Café da Manhã:", value=ui.session_state.get('sv_cafe', ''))
+            almo = ui.text_area("🍚 Almoço:", value=ui.session_state.get('sv_almo', ''))
+            lanc = ui.text_area("🍏 Lanche:", value=ui.session_state.get('sv_lanc', ''))
+            jant = ui.text_area("🥗 Jantar:", value=ui.session_state.get('sv_jant', ''))
 
     with t4:
         ui.header("📚 Banco de Dados")
@@ -253,17 +253,12 @@ else:
             gc_p = ui.session_state.get('gc', 0)
             gf_p = ui.session_state.get('gf', 0)
             
-            c_f = ui.session_state.get('sv_cafe', 'Vazio')
-            a_l = ui.session_state.get('sv_almo', 'Vazio')
-            l_a = ui.session_state.get('sv_lanc', 'Vazio')
-            j_a = ui.session_state.get('sv_jant', 'Vazio')
-            
             txt = f"PACIENTE: {p_ativo}\nESTRATEGIA: {est_n}\n"
             txt += f"DIETA: {m_die:.0f} kcal\n"
             txt += f"MACROS: P:{gp_p:.1f}g | C:{gc_p:.1f}g | G:{gf_p:.1f}g\n"
             txt += f"AGUA: {ag_pr:.2f}L\n\nCARDAPIO:\n"
-            txt += f"Cafe: {c_f}\nAlmoco: {a_l}\n"
-            txt += f"Lanche: {l_a}\nJantar: {j_a}"
+            txt += f"Cafe: {cafe}\nAlmoco: {almo}\n"
+            txt += f"Lanche: {lanc}\nJantar: {jant}"
             
             ui.text_area("Texto:", txt, height=200)
             ui.download_button("📥 Baixar TXT", data=txt, file_name=f"WebDiet_{p_ativo}.txt")
