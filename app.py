@@ -7,11 +7,12 @@ ARQ = 'consultas_nutricionais.csv'
 SENHA = "Mi81283137."
 
 ui.set_page_config(
-    page_title="WebDiet Pro",
+    page_title="WebDiet",
     page_icon="🥗",
     layout="wide"
 )
 
+# DESIGN PROFISSIONAL COMPACTO
 ui.markdown("""
     <style>
     .stApp { background-color: #f7f9fc; }
@@ -80,7 +81,9 @@ else:
                 else:
                     geb = 655.1 + (9.563 * peso) + (1.85 * alt_cm) - (4.676 * idade)
                 
-                val_met = float(mod.split("MET: ")[1].replace(")", ""))
+                # CÁLCULO SEGURO DO MET TRATANDO A STRING CORRETAMENTE
+                partes = mod.split("MET: ")
+                val_met = float(partes[1].replace(")", ""))
                 g_treino = (val_met * 3.5 * peso / 200) * tempo
                 g_total = (geb * 1.2) + g_treino
 
@@ -108,7 +111,7 @@ else:
                     if not existe:
                         esc.writerow(["Nome", "Idade", "Sexo", "Peso", "Alt", "Obj", "Est", "Kcal", "Agua"])
                     esc.writerow([nome, idade, sexo, peso, alt, obj, est, f"{kc:.0f}", f"{agua:.2f}"])
-                ui.success("💾 Salvo no histórico permanente!")
+                ui.success("💾 Salvo no histórico!")
 
         if ui.session_state.get('calc', False) and ui.session_state.get('n_p', ''):
             ui.markdown(f"""<div class='metric-card'>
@@ -125,7 +128,7 @@ else:
             m1.metric("Proteínas", f"{ui.session_state['gp']:.1f} g")
             m2.metric("Carboidratos", f"{ui.session_state['gc']:.1f} g")
             m3.metric("Lipídios", f"{ui.session_state['gf']:.1f} g")
-            with t2:
+    with t2:
         ui.header("Jackson & Pollock (7 Dobras)")
         ui.subheader(f"Paciente: {ui.session_state.get('n_p', 'Nenhum')}")
         
@@ -167,7 +170,7 @@ else:
             </div>""", unsafe_allow_html=True)
 
     with t3:
-        ui.header("🍳 Plano Alimentar & Modelos Prontos")
+        ui.header("🍳 Plano Alimentar & Modelos")
         col_diet, col_sub = ui.columns(2)
         
         with col_diet:
@@ -181,17 +184,12 @@ else:
             ui.text_area("🥗 Jantar:", key='sv_jant')
 
         with col_sub:
-            ui.subheader("📚 Modelos Injetáveis (WebDiet)")
-            # MENU EXPANDIDO COM MAIS 4 PROTOCOLOS CLÍNICOS
-            modelo = ui.selectbox("Escolha um Protocolo Clínico Base:", [
-                "Nenhum", 
-                "Idosos (Perda de Peso)", 
-                "Diabéticos (Controle)", 
-                "Hipertrofia Padrão",
-                "Vegetariano/Vegano (Proteína Vegetal)",
-                "Gestante (Nutrientes Críticos/Fólico)",
-                "Hipertensão (DASH - Baixo Sódio)",
-                "Low Carb Estruturado"
+            ui.subheader("📚 Biblioteca de Modelos")
+            modelo = ui.selectbox("Escolha um Protocolo:", [
+                "Nenhum", "Idosos (Perda de Peso)", 
+                "Diabéticos (Controle)", "Hipertrofia Padrão",
+                "Vegetariano/Vegano", "Gestante Padrão",
+                "Hipertensão (DASH)", "Low Carb Estruturado"
             ])
             
             if ui.button("Injetar Modelo"):
@@ -212,30 +210,29 @@ else:
                     ui.session_state['sv_jant'] = "Macarrão + Frango desfiado (150g) + Molho natural."
                 elif "Vegetariano" in modelo:
                     ui.session_state['sv_cafe'] = "Tofu mexido com cúrcuma + Torrada integral + Suco verde."
-                    ui.session_state['sv_almo'] = "Arroz integral + Feijão preto + Hambúrguer de grão-de-bico + Couve refogada."
+                    ui.session_state['sv_almo'] = "Arroz integral + Feijão preto + Hambúrguer de grão-de-bico."
                     ui.session_state['sv_lanc'] = "Mix de sementes (abóbora e girassol) + Frutas vermelhas."
-                    ui.session_state['sv_jant'] = "Creme de ervilha com croutons integrais e cubos de tofu grelhado."
+                    ui.session_state['sv_jant'] = "Creme de ervilha com cubos de tofu grelhado."
                 elif "Gestante" in modelo:
                     ui.session_state['sv_cafe'] = "Iogurte natural batido com morango + Aveia + 1 ovo cozido."
-                    ui.session_state['sv_almo'] = "Bife de fígado acebolado ou Alcatra magra + Arroz + Feijão + Espinafre cozido."
-                    ui.session_state['sv_lanc'] = "1 banana prata com 1 colher de sopa de semente de linhaça dourada."
-                    ui.session_state['sv_jant'] = "Filé de salmão grelhado + Batata inglesa assada com casca + Salada de agrião."
+                    ui.session_state['sv_almo'] = "Alcatra magra + Arroz + Feijão + Espinafre cozido."
+                    ui.session_state['sv_lanc'] = "1 banana prata com 1 colher de sopa de semente de linhaça."
+                    ui.session_state['sv_jant'] = "Filé de salmão grelhado + Batata inglesa assada com casca."
                 elif "Hipertensão" in modelo:
-                    ui.session_style = "Dieta estilo DASH (Sem adição de sal refinado)"
-                    ui.session_state['sv_cafe'] = "Mingau de aveia com leite desnatado, rodelas de banana e canela."
-                    ui.session_state['sv_almo'] = "Peito de frango grelhado com ervas finas + Arroz integral + Salada de alface e cenoura."
-                    ui.session_state['sv_lanc'] = "Uma porção de melão picado + Um punhado de amêndoas sem sal."
-                    ui.session_state['sv_jant'] = "Filé de pescada ao forno com tomate, cebola, pimentão e um fio de azeite."
+                    ui.session_state['sv_cafe'] = "Mingau de aveia com leite desnatado e rodelas de banana."
+                    ui.session_state['sv_almo'] = "Peito de frango com ervas + Arroz integral + Alface."
+                    ui.session_state['sv_lanc'] = "Uma porção de melão picado + Amêndoas sem sal."
+                    ui.session_state['sv_jant'] = "Filé de pescada ao forno com tomate e cebola."
                 elif "Low Carb" in modelo:
-                    ui.session_state['sv_cafe'] = "Ovos mexidos na manteiga com bacon artesanal e fatias de abacate."
-                    ui.session_state['sv_almo'] = "Contrafilé grelhado + Espaguete de abobrinha ao molho pesto de castanhas."
-                    ui.session_state['sv_lanc'] = "Lascas de coco seco + Mix de castanhas do pará e nozes."
-                    ui.session_state['sv_jant'] = "Frango assado com pele + Salada de rúcula, tomate cereja e queijo parmesão."
-                ui.success("⚡ Modelo clínico injetado com sucesso!")
+                    ui.session_state['sv_cafe'] = "Ovos mexidos na manteiga e fatias de abacate."
+                    ui.session_state['sv_almo'] = "Contrafilé grelhado + Espaguete de abobrinha ao pesto."
+                    ui.session_state['sv_lanc'] = "Lascas de coco seco + Mix de castanhas."
+                    ui.session_state['sv_jant'] = "Frango assado + Salada de rúcula com queijo parmesão."
+                ui.success("⚡ Modelo aplicado com sucesso!")
                 ui.rerun()
 
     with t4:
-        ui.header("📚 Banco de Dados Permanente")
+        ui.header("📚 Banco de Dados")
         if os.path.exists(ARQ):
             ui.dataframe(pd.read_csv(ARQ), use_container_width=True)
             if ui.button("Apagar Histórico"):
@@ -245,7 +242,7 @@ else:
             ui.info("Sem registros no arquivo CSV.")
 
     with t5:
-        ui.header("📚 Prontuário para Impressão")
+        ui.header("📚 Prontuário")
         p_ativo = ui.session_state.get('n_p', '')
         
         if p_ativo != '':
@@ -272,5 +269,3 @@ else:
             ui.download_button("📥 Baixar TXT", data=txt, file_name=f"WebDiet_{p_ativo}.txt")
         else:
             ui.info("Preencha o Nome na Aba 1.")
-
-       
