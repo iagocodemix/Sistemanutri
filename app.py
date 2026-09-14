@@ -125,7 +125,7 @@ else:
             m1.metric("Proteínas", f"{ui.session_state['gp']:.1f} g")
             m2.metric("Carboidratos", f"{ui.session_state['gc']:.1f} g")
             m3.metric("Lipídios", f"{ui.session_state['gf']:.1f} g")
-    with t2:
+        with t2:
         ui.header("Jackson & Pollock (7 Dobras)")
         ui.subheader(f"Paciente: {ui.session_state.get('n_p', 'Nenhum')}")
         
@@ -181,10 +181,17 @@ else:
             ui.text_area("🥗 Jantar:", key='sv_jant')
 
         with col_sub:
-            ui.subheader("📚 Modelos Injetáveis")
+            ui.subheader("📚 Modelos Injetáveis (WebDiet)")
+            # MENU EXPANDIDO COM MAIS 4 PROTOCOLOS CLÍNICOS
             modelo = ui.selectbox("Escolha um Protocolo Clínico Base:", [
-                "Nenhum", "Idosos (Perda de Peso)", 
-                "Diabéticos (Controle)", "Hipertrofia"
+                "Nenhum", 
+                "Idosos (Perda de Peso)", 
+                "Diabéticos (Controle)", 
+                "Hipertrofia Padrão",
+                "Vegetariano/Vegano (Proteína Vegetal)",
+                "Gestante (Nutrientes Críticos/Fólico)",
+                "Hipertensão (DASH - Baixo Sódio)",
+                "Low Carb Estruturado"
             ])
             
             if ui.button("Injetar Modelo"):
@@ -203,7 +210,28 @@ else:
                     ui.session_state['sv_almo'] = "Arroz branco (250g) + Feijão + Patinho moído (150g)."
                     ui.session_state['sv_lanc'] = "Whey protein + 50g farelo aveia + 1 maçã."
                     ui.session_state['sv_jant'] = "Macarrão + Frango desfiado (150g) + Molho natural."
-                ui.success("⚡ Modelo aplicado com sucesso!")
+                elif "Vegetariano" in modelo:
+                    ui.session_state['sv_cafe'] = "Tofu mexido com cúrcuma + Torrada integral + Suco verde."
+                    ui.session_state['sv_almo'] = "Arroz integral + Feijão preto + Hambúrguer de grão-de-bico + Couve refogada."
+                    ui.session_state['sv_lanc'] = "Mix de sementes (abóbora e girassol) + Frutas vermelhas."
+                    ui.session_state['sv_jant'] = "Creme de ervilha com croutons integrais e cubos de tofu grelhado."
+                elif "Gestante" in modelo:
+                    ui.session_state['sv_cafe'] = "Iogurte natural batido com morango + Aveia + 1 ovo cozido."
+                    ui.session_state['sv_almo'] = "Bife de fígado acebolado ou Alcatra magra + Arroz + Feijão + Espinafre cozido."
+                    ui.session_state['sv_lanc'] = "1 banana prata com 1 colher de sopa de semente de linhaça dourada."
+                    ui.session_state['sv_jant'] = "Filé de salmão grelhado + Batata inglesa assada com casca + Salada de agrião."
+                elif "Hipertensão" in modelo:
+                    ui.session_style = "Dieta estilo DASH (Sem adição de sal refinado)"
+                    ui.session_state['sv_cafe'] = "Mingau de aveia com leite desnatado, rodelas de banana e canela."
+                    ui.session_state['sv_almo'] = "Peito de frango grelhado com ervas finas + Arroz integral + Salada de alface e cenoura."
+                    ui.session_state['sv_lanc'] = "Uma porção de melão picado + Um punhado de amêndoas sem sal."
+                    ui.session_state['sv_jant'] = "Filé de pescada ao forno com tomate, cebola, pimentão e um fio de azeite."
+                elif "Low Carb" in modelo:
+                    ui.session_state['sv_cafe'] = "Ovos mexidos na manteiga com bacon artesanal e fatias de abacate."
+                    ui.session_state['sv_almo'] = "Contrafilé grelhado + Espaguete de abobrinha ao molho pesto de castanhas."
+                    ui.session_state['sv_lanc'] = "Lascas de coco seco + Mix de castanhas do pará e nozes."
+                    ui.session_state['sv_jant'] = "Frango assado com pele + Salada de rúcula, tomate cereja e queijo parmesão."
+                ui.success("⚡ Modelo clínico injetado com sucesso!")
                 ui.rerun()
 
     with t4:
